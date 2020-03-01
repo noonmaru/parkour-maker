@@ -18,15 +18,13 @@ class ParkourListener : Listener {
     @EventHandler
     fun onQuit(event: PlayerQuitEvent) {
         event.player.let { player ->
-            ParkourMaker._traceurs[player.uniqueId]?.apply {
-                this.player = null
-            }
+            player.traceur?.apply { this.player = null }
         }
     }
 
     @EventHandler
     fun onInteract(event: PlayerInteractEvent) {
-        ParkourMaker.traceurs[event.player.uniqueId]?.challenge?.let { challenge ->
+        event.player.traceur?.challenge?.let { challenge ->
             event.clickedBlock?.let { block ->
                 challenge.dataByBlock[block]?.run {
                     event.isCancelled = true
