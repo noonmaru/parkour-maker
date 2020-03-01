@@ -52,7 +52,7 @@ class ParkourMakerPlugin : JavaPlugin() {
 
     override fun onDisable() {
         ParkourMaker.levels.values.forEach {
-            it.save()
+            //            it.save()
             it.challenge?.run {
                 it.stopChallenge()
             }
