@@ -21,7 +21,7 @@ class Challenge(val level: Level) {
     val traceurs: Set<Traceur>
         get() = _traceurs
 
-    private var _spawns = HashMap<Traceur, Location>()
+    internal var _spawns = HashMap<Traceur, Location>()
 
     val spawns: Map<Traceur, Location>
         get() = _spawns

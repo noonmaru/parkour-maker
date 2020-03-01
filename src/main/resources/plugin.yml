@@ -1,6 +1,7 @@
 name: $pluginName
 main: $pluginMain
 depend: [Kotlin, Tap, WorldEdit]
+authors: [Noonmaru, MinedApple]
 api-version: '1.13'
 version: $pluginVersion
 commands:

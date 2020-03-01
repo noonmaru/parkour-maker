@@ -16,7 +16,7 @@ repositories {
 dependencies {
     implementation(kotlin("stdlib-jdk8")) //kotlin
     implementation("junit:junit:4.12") //junit
-    implementation("com.destroystokyo.paper:paper-api:1.13.2-R0.1-SNAPSHOT") //paper
+    implementation("com.destroystokyo.paper:paper-api:1.15.2-R0.1-SNAPSHOT") //paper
     implementation("com.comphenix.protocol:ProtocolLib:4.5.0") //protocollib
     implementation("com.github.noonmaru:tap:2.3.1") //tap
     implementation("com.sk89q.worldedit:worldedit-bukkit:7.1.0") //worldedit

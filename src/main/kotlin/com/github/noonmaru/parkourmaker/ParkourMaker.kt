@@ -2,6 +2,7 @@ package com.github.noonmaru.parkourmaker
 
 import com.github.noonmaru.tap.fake.FakeManager
 import org.bukkit.Bukkit
+import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.player.PlayerJoinEvent
@@ -69,3 +70,6 @@ object ParkourMaker {
         }
     }
 }
+
+val Player.traceur: Traceur?
+    get() = ParkourMaker.traceurs[uniqueId]

@@ -1,6 +1,5 @@
 package com.github.noonmaru.parkourmaker
 
-import org.bukkit.block.BlockFace
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.player.PlayerInteractEvent
@@ -30,6 +29,7 @@ class ParkourListener : Listener {
         ParkourMaker.traceurs[event.player.uniqueId]?.challenge?.let { challenge ->
             event.clickedBlock?.let { block ->
                 challenge.dataByBlock[block]?.run {
+                    event.isCancelled = true
                     onInteract(challenge, event)
                 }
             }
@@ -42,11 +42,12 @@ class ParkourListener : Listener {
 
         if (player.isOnGround) {
             ParkourMaker.traceurs[event.player.uniqueId]?.challenge?.let { challenge ->
-                val block = event.to.block.getRelative(BlockFace.DOWN)
+                val block = event.to.block
                 challenge.dataByBlock[block]?.run {
-                    onStep(challenge, event)
+                    onPass(challenge, event)
                 }
             }
         }
     }
+
 }

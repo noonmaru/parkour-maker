@@ -13,9 +13,10 @@ import com.sk89q.worldedit.math.BlockVector3
 import com.sk89q.worldedit.regions.CuboidRegion
 import com.sk89q.worldedit.session.ClipboardHolder
 import org.bukkit.Bukkit
-import org.bukkit.configuration.Configuration
 import org.bukkit.configuration.ConfigurationSection
 import org.bukkit.configuration.file.YamlConfiguration
+import org.bukkit.entity.Player
+import org.bukkit.util.BoundingBox
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
@@ -43,6 +44,8 @@ class Level {
         get() = File(ParkourMaker.coursesFolder, "$name.schem")
 
     constructor(name: String, region: CuboidRegion) {
+        checkNotNull(region.world) { "Region must have region!" }
+
         this.name = name
         this.region = region
         this.file = File(ParkourMaker.levelFolder, "$name.yml")
@@ -69,50 +72,65 @@ class Level {
         }
     }
 
-    fun startChallenge() {
+    fun startChallenge(): Challenge {
         check(challenge == null) { "Challenge is already in progress." }
 
         copyCourse()
-        challenge = Challenge(this).apply {
+        val challenge = Challenge(this).apply {
             parseBlocks()
         }
+
+        this.challenge = challenge
+
+        return challenge
     }
 
-    private fun copyCourse() {
+    internal fun copyCourse() {
         this.clipboard = BlockArrayClipboard(region).apply {
             Operations.complete(
                 ForwardExtentCopy(
                     WorldEdit.getInstance().editSessionFactory.getEditSession(
                         region.world,
                         -1
-                    ), region, clipboard, region.minimumPoint
+                    ), region, this, region.minimumPoint
                 ).apply {
                     isCopyingEntities = true
                 })
+        }.apply {
+            save()
         }
     }
 
     fun stopChallenge() {
-        challenge.let {
-            checkNotNull(it) { "Challenge is not in progress." }
-            challenge = null
-            it.destroy()
+        challenge.let { challenge ->
+            checkNotNull(challenge) { "Challenge is not in progress." }
+            this.challenge = null
+            challenge.destroy()
+
+            val world = BukkitAdapter.asBukkitWorld(region.world).world
+            val min = region.minimumPoint.run { world.getBlockAt(x, y, z) }
+            val max = region.maximumPoint.run { world.getBlockAt(x, y, z) }
+            val box = BoundingBox.of(min, max)
+            world.getNearbyEntities(box) { it !is Player }.forEach { it.remove() }
             clipboard?.paste()
         }
     }
 
     private fun Clipboard.save() {
         val file = courseFile
-        val temp = File(file.parent, "${file.name}.tmp")
+        val temp = File(file.parentFile.apply { mkdirs() }, "${file.name}.tmp")
 
         BuiltInClipboardFormat.SPONGE_SCHEMATIC.getWriter(FileOutputStream(temp))
-            .use { writer -> writer.write(clipboard) }
+            .use { writer -> writer.write(this) }
 
         if (file.exists()) {
             if (file.md5Digest.contentEquals(temp.md5Digest)) {
                 Files.copy(
                     file.toPath(),
-                    File(ParkourMaker.historyFolder, "$name${dateFormat.format(Date())}.schem").toPath(),
+                    File(
+                        ParkourMaker.historyFolder.apply { mkdirs() },
+                        "$name${dateFormat.format(Date())}.schem"
+                    ).toPath(),
                     StandardCopyOption.REPLACE_EXISTING
                 )
             }
@@ -128,7 +146,7 @@ class Level {
         val mp = region.minimumPoint
 
         WorldEdit.getInstance().editSessionFactory.getEditSession(region.world, -1).use { editSession ->
-            val operation: Operation = ClipboardHolder(clipboard)
+            val operation: Operation = ClipboardHolder(this)
                 .createPaste(editSession)
                 .to(BlockVector3.at(mp.x, mp.y, mp.z))
                 .ignoreAirBlocks(false)
@@ -165,11 +183,12 @@ private val File.md5Digest: ByteArray
 private val dateFormat = SimpleDateFormat("yyyyMMddHHmmss")
 
 private fun ConfigurationSection.getBlockVector3(path: String): BlockVector3 {
-    return getConfigurationSection("path").run {
+    return getConfigurationSection(path)!!.run {
         BlockVector3.at(
             getInt("x"),
             getInt("y"),
-            getInt("z"))
+            getInt("z")
+        )
     }
 }
 

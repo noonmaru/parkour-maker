@@ -2,14 +2,17 @@ package com.github.noonmaru.parkourmaker
 
 import com.github.noonmaru.tap.fake.FakeArmorStand
 import com.github.noonmaru.tap.fake.FakeFallingBlock
-import org.bukkit.DyeColor
+import org.bukkit.Location
 import org.bukkit.Material
+import org.bukkit.Sound
+import org.bukkit.SoundCategory
 import org.bukkit.block.Banner
 import org.bukkit.block.Block
+import org.bukkit.block.BlockFace
 import org.bukkit.block.data.BlockData
+import org.bukkit.block.data.Directional
 import org.bukkit.event.player.PlayerInteractEvent
 import org.bukkit.event.player.PlayerMoveEvent
-import org.bukkit.material.Colorable
 
 object ParkourBlocks {
 
@@ -23,19 +26,12 @@ object ParkourBlocks {
         val data = block.blockData
         val type = data.material
 
-        if (type == Material.EMERALD) {
+        if (type == Material.EMERALD_BLOCK) {
             return SPAWN
-        }
-        else if (state is Banner) {
+        } else if (state is Banner) {
             return CHECKPOINT
-        }
-        else if (type == Material.SHULKER_BOX) {
-            data as Colorable
-            val color = data.color
-
-            if (color == Toggle.RED.switchColor || color == Toggle.BLUE.switchColor) {
-                return SWITCH
-            }
+        } else if (type == Material.RED_SHULKER_BOX || type == Material.LIGHT_BLUE_SHULKER_BOX) {
+            return SWITCH
         } else if (type == Material.RED_CONCRETE || type == Material.LIGHT_BLUE_CONCRETE) {
             return TOGGLE
         }
@@ -45,7 +41,6 @@ object ParkourBlocks {
 }
 
 abstract class ParkourBlock {
-
     fun createBlockData(block: Block): ParkourBlockData {
         return newBlockData(block).apply {
             this.block = block
@@ -65,7 +60,7 @@ abstract class ParkourBlockData {
 
     open fun onInitialize(challenge: Challenge) {}
 
-    open fun onStep(challenge: Challenge, event: PlayerMoveEvent) {}
+    open fun onPass(challenge: Challenge, event: PlayerMoveEvent) {}
 
     open fun onInteract(challenge: Challenge, event: PlayerInteractEvent) {}
 
@@ -78,67 +73,98 @@ class SpawnBlock : ParkourBlock() {
     }
 
     class SpawnData : ParkourBlockData() {
-        val location
-            get() = block.location.add(0.5, 0.0, 0.5)
+        val location: Location
+            get() {
+                val loc = block.location.add(0.5, 1.0, 0.5)
+                block.getRelative(BlockFace.DOWN).let { down ->
+                    if (down.type == Material.MAGENTA_GLAZED_TERRACOTTA) {
+                        val blockData = down.blockData
+                        blockData as Directional
+
+                        loc.yaw = when (blockData.facing) {
+                            BlockFace.EAST -> 90.0F
+                            BlockFace.SOUTH -> 180.0F
+                            BlockFace.WEST -> 270.0F
+                            else -> 0.0F
+                        }
+                    }
+                }
+                return loc
+            }
     }
 }
 
-class CheckpointBlock: ParkourBlock() {
+class CheckpointBlock : ParkourBlock() {
     override fun newBlockData(block: Block): ParkourBlockData {
         return CheckpointData()
     }
 
-    class CheckpointData: ParkourBlockData() {
+    class CheckpointData : ParkourBlockData() {
         val location
-            get() = block.location.add(0.5, 0.0, 0.5)
+            get() = block.location.add(0.5, 1.0, 0.5)
+
+        override fun onPass(challenge: Challenge, event: PlayerMoveEvent) {
+            challenge._spawns[event.player.traceur!!] = location
+        }
     }
 }
 
-enum class Toggle(val blockType: Material, val fakeData: BlockData, val switchColor: DyeColor, val next: () -> Toggle) {
+enum class Toggle(val blockType: Material, val fakeData: BlockData, val switchType: Material, val next: () -> Toggle) {
     RED(Material.RED_CONCRETE,
         Material.RED_STAINED_GLASS.createBlockData(),
-        DyeColor.RED,
+        Material.RED_SHULKER_BOX,
         { BLUE }),
     BLUE(
         Material.LIGHT_BLUE_CONCRETE,
         Material.LIGHT_BLUE_STAINED_GLASS.createBlockData(),
-        DyeColor.LIGHT_BLUE,
+        Material.LIGHT_BLUE_SHULKER_BOX,
         { RED });
-
-    val switchData: BlockData = Material.SHULKER_BOX.createBlockData {
-        it as Colorable
-        it.color = switchColor
-    }
 }
 
 class SwitchBlock : ParkourBlock() {
     override fun newBlockData(block: Block): ParkourBlockData {
-        return OnOffData()
+        return SwitchData()
     }
 
-    class OnOffData : ParkourBlockData() {
+    class SwitchData : ParkourBlockData() {
+
+        override fun onInitialize(challenge: Challenge) {
+            update(challenge.toggle)
+        }
+
+        private fun update(toggle: Toggle) {
+            block.type = toggle.switchType
+        }
+
         override fun onInteract(challenge: Challenge, event: PlayerInteractEvent) {
             challenge.toggle = challenge.toggle.next()
 
-            val blockData = block.blockData
+            when (val type = block.type) {
+                Toggle.RED.switchType -> {
+                    Toggle.BLUE
+                }
+                Toggle.BLUE.switchType -> {
+                    Toggle.RED
+                }
+                else -> error("Non switch type $type")
+            }.let { toggle ->
 
-            if (blockData.material == Material.SHULKER_BOX) {
-                blockData as Colorable
+                val loc = block.location.add(0.5, 0.0, 0.5)
 
-                when (val color = blockData.color) {
-                    Toggle.RED.switchColor -> {
-                        Toggle.RED
+                challenge.traceurs.forEach {
+                    it.player?.let { p ->
+                        p.playSound(loc, Sound.BLOCK_NOTE_BLOCK_BIT, SoundCategory.MASTER, 0.8F, 2.0F)
                     }
-                    Toggle.BLUE.switchColor -> {
-                        Toggle.BLUE
-                    }
-                    else -> error("Unknown switch color: $color")
-                }.let { toggle ->
-                    block.blockData = toggle.switchData
-                    challenge.dataMap[ParkourBlocks.TOGGLE]?.forEach { data ->
-                        data as ToggleBlock.ToggleData
-                        data.update(toggle)
-                    }
+                }
+
+                block.type = toggle.switchType
+                challenge.dataMap[ParkourBlocks.SWITCH]?.forEach {
+                    it as SwitchData
+                    it.update(toggle)
+                }
+                challenge.dataMap[ParkourBlocks.TOGGLE]?.forEach {
+                    it as ToggleBlock.ToggleData
+                    it.update(toggle)
                 }
             }
         }
@@ -169,7 +195,7 @@ class ToggleBlock : ParkourBlock() {
                     mark = true
                 }
                 fakeBlock = createFallingBlock(loc, toggle.fakeData).apply {
-                    fakeStand.addPassenger(fakeBlock)
+                    fakeStand.addPassenger(this)
                 }
             }
 
@@ -192,6 +218,3 @@ class ToggleBlock : ParkourBlock() {
         }
     }
 }
-
-
-
