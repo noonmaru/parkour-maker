@@ -4,7 +4,6 @@ import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableMap
 import com.sk89q.worldedit.bukkit.BukkitAdapter
 import com.sk89q.worldedit.regions.Region
-import org.bukkit.Location
 import org.bukkit.block.Block
 
 
@@ -14,17 +13,17 @@ class Challenge(val level: Level) {
 
     lateinit var dataByBlock: Map<Block, ParkourBlockData>
 
-    lateinit var startLocs: List<Location>
+    lateinit var startLocs: List<SpawnBlock.SpawnData>
 
     private var _traceurs = HashSet<Traceur>()
 
     val traceurs: Set<Traceur>
         get() = _traceurs
 
-    internal var _spawns = HashMap<Traceur, Location>()
+    private var _respawns = HashMap<Traceur, Respawnable>()
 
-    val spawns: Map<Traceur, Location>
-        get() = _spawns
+    val respawns: Map<Traceur, Respawnable>
+        get() = _respawns
 
     var toggle = Toggle.RED
         internal set
@@ -37,7 +36,7 @@ class Challenge(val level: Level) {
 
         val dataMap = HashMap<ParkourBlock, HashSet<ParkourBlockData>>()
         val dataByBlock = HashMap<Block, ParkourBlockData>()
-        val startLocs = ArrayList<Location>()
+        val startLocs = ArrayList<SpawnBlock.SpawnData>()
 
         level.region.forEachBlocks { block ->
             ParkourBlocks.getBlock(block)?.let { parkourBlock ->
@@ -48,7 +47,7 @@ class Challenge(val level: Level) {
                 dataByBlock[block] = data
 
                 if (data is SpawnBlock.SpawnData) {
-                    startLocs.add(data.location)
+                    startLocs.add(data)
                 }
             }
         }
@@ -61,10 +60,17 @@ class Challenge(val level: Level) {
     fun addTraceur(traceur: Traceur) {
         checkState()
 
+        traceur.challenge?.let {
+            if (this == this)
+                return
+
+            it.removeTraceur(traceur)
+        }
+
         if (_traceurs.add(traceur)) {
             startLocs.let { locs ->
                 if (locs.isNotEmpty()) {
-                    _spawns[traceur] = locs.random()
+                    _respawns[traceur] = locs.random()
                 }
             }
 
@@ -76,7 +82,7 @@ class Challenge(val level: Level) {
         checkState()
 
         if (_traceurs.remove(traceur)) {
-            _spawns.remove(traceur)
+            _respawns.remove(traceur)
             traceur.challenge = null
         }
     }
@@ -90,7 +96,7 @@ class Challenge(val level: Level) {
             forEach { it.challenge = null }
             clear()
         }
-        _spawns.clear()
+        _respawns.clear()
 
         dataByBlock.values.forEach {
             it.destroy()
@@ -99,6 +105,10 @@ class Challenge(val level: Level) {
 
     fun checkState() {
         check(this.valid) { "Invalid $this" }
+    }
+
+    internal fun setSpawn(traceur: Traceur, respawnable: Respawnable): Respawnable? {
+        return _respawns.put(traceur, respawnable)
     }
 }
 

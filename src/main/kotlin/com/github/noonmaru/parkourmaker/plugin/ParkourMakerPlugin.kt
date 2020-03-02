@@ -3,10 +3,7 @@ package com.github.noonmaru.parkourmaker.plugin
 import com.github.noonmaru.parkourmaker.ParkourListener
 import com.github.noonmaru.parkourmaker.ParkourMaker
 import com.github.noonmaru.parkourmaker.ParkourTask
-import com.github.noonmaru.parkourmaker.command.CommandCreate
-import com.github.noonmaru.parkourmaker.command.CommandList
-import com.github.noonmaru.parkourmaker.command.CommandStart
-import com.github.noonmaru.parkourmaker.command.CommandStop
+import com.github.noonmaru.parkourmaker.command.*
 import com.github.noonmaru.tap.command.command
 import org.bukkit.plugin.java.JavaPlugin
 
@@ -33,19 +30,29 @@ class ParkourMakerPlugin : JavaPlugin() {
                 description = "레벨을 생성합니다."
                 CommandCreate()
             }
+            component("remove") {
+                usage = "[Parkour...]"
+                description = "레벨을 제거합니다."
+                CommandRemove()
+            }
             component("list") {
                 description = "레벨 목록을 확인합니다."
                 CommandList()
             }
             component("start") {
-                usage = "<Parkour> [Players...]"
-                description = "레벨 도전을 시작합니다."
+                usage = "<Parkour> [Player...]"
+                description = "레벨 도전을 시작 혹은 참가합니다."
                 CommandStart()
             }
             component("stop") {
-                usage = "<Parkour>"
+                usage = "[Parkour...]"
                 description = "레벨 도전을 종료합니다."
                 CommandStop()
+            }
+            component("quit") {
+                usage = "[Player...]"
+                description = "레벨 도전을 포기합니다."
+                CommandQuit()
             }
         }
     }

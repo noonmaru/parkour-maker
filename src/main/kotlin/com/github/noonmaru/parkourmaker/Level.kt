@@ -43,6 +43,9 @@ class Level {
     private val courseFile: File
         get() = File(ParkourMaker.coursesFolder, "$name.schem")
 
+    var valid = true
+        private set
+
     constructor(name: String, region: CuboidRegion) {
         checkNotNull(region.world) { "Region must have region!" }
 
@@ -73,6 +76,8 @@ class Level {
     }
 
     fun startChallenge(): Challenge {
+        checkState()
+
         check(challenge == null) { "Challenge is already in progress." }
 
         copyCourse()
@@ -102,6 +107,8 @@ class Level {
     }
 
     fun stopChallenge() {
+        checkState()
+
         challenge.let { challenge ->
             checkNotNull(challenge) { "Challenge is not in progress." }
             this.challenge = null
@@ -156,6 +163,8 @@ class Level {
     }
 
     fun save() {
+        checkState()
+
         val config = YamlConfiguration()
         region.let { region ->
             config.set("world", region.world!!.name)
@@ -165,6 +174,17 @@ class Level {
 
         file.parentFile.mkdirs()
         config.save(file)
+    }
+
+    fun checkState() {
+        require(valid) { "Invalid $this" }
+    }
+
+    fun remove() {
+        challenge?.run { stopChallenge() }
+        valid = false
+        file.delete()
+        ParkourMaker.removeLevel(this)
     }
 }
 

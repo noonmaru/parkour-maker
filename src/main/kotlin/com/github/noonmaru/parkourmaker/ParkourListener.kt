@@ -1,5 +1,6 @@
 package com.github.noonmaru.parkourmaker
 
+import org.bukkit.block.BlockFace
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.player.PlayerInteractEvent
@@ -10,25 +11,24 @@ import org.bukkit.event.player.PlayerQuitEvent
 class ParkourListener : Listener {
     @EventHandler
     fun onJoin(event: PlayerJoinEvent) {
-        event.player.let { player ->
-            ParkourMaker._traceurs.computeIfAbsent(player.uniqueId) { Traceur(player) }
-        }
+        ParkourMaker.registerPlayer(event.player)
     }
 
     @EventHandler
     fun onQuit(event: PlayerQuitEvent) {
-        event.player.let { player ->
-            player.traceur?.apply { this.player = null }
+        event.player.traceur.apply {
+            player = null
         }
     }
 
     @EventHandler
     fun onInteract(event: PlayerInteractEvent) {
-        event.player.traceur?.challenge?.let { challenge ->
-            event.clickedBlock?.let { block ->
+        event.clickedBlock?.let { block ->
+            val traceur = event.player.traceur
+            traceur.challenge?.let { challenge ->
                 challenge.dataByBlock[block]?.run {
                     event.isCancelled = true
-                    onInteract(challenge, event)
+                    onInteract(challenge, traceur, event)
                 }
             }
         }
@@ -36,16 +36,21 @@ class ParkourListener : Listener {
 
     @EventHandler
     fun onMove(event: PlayerMoveEvent) {
-        val player = event.player
+        event.player.let { player ->
 
-        if (player.isOnGround) {
-            ParkourMaker.traceurs[event.player.uniqueId]?.challenge?.let { challenge ->
-                val block = event.to.block
-                challenge.dataByBlock[block]?.run {
-                    onPass(challenge, event)
+            val traceur = player.traceur
+            traceur.challenge?.let { challenge ->
+                val passBlock = event.to.block
+                challenge.dataByBlock[passBlock]?.run {
+                    onPass(challenge, traceur, event)
+                }
+                if (player.isOnGround) {
+                    val stepBlock = passBlock.getRelative(BlockFace.DOWN)
+                    challenge.dataByBlock[stepBlock]?.run {
+                        onStep(challenge, traceur, event)
+                    }
                 }
             }
         }
     }
-
 }
