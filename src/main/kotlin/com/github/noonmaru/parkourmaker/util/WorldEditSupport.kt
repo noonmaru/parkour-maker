@@ -1,6 +1,5 @@
 package com.github.noonmaru.parkourmaker.util
 
-import com.sk89q.worldedit.IncompleteRegionException
 import com.sk89q.worldedit.WorldEdit
 import com.sk89q.worldedit.bukkit.BukkitAdapter
 import com.sk89q.worldedit.math.BlockVector3
@@ -12,12 +11,12 @@ import org.bukkit.util.Vector
 
 val Player.selection: Region?
     get() {
-        return WorldEdit.getInstance().sessionManager[BukkitAdapter.adapt(this)]?.run {
-            try {
+        return try {
+            WorldEdit.getInstance().sessionManager[BukkitAdapter.adapt(this)]?.run {
                 getSelection(selectionWorld)
-            } catch (e: IncompleteRegionException) {
-                null
             }
+        } catch (e: Exception) {
+            null
         }
     }
 
