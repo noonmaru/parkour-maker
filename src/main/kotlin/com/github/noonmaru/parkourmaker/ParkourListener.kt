@@ -1,8 +1,10 @@
 package com.github.noonmaru.parkourmaker
 
 import org.bukkit.block.BlockFace
+import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
+import org.bukkit.event.entity.ProjectileHitEvent
 import org.bukkit.event.player.PlayerInteractEvent
 import org.bukkit.event.player.PlayerJoinEvent
 import org.bukkit.event.player.PlayerMoveEvent
@@ -29,6 +31,24 @@ class ParkourListener : Listener {
                 challenge.dataByBlock[block]?.run {
                     event.isCancelled = true
                     onInteract(challenge, traceur, event)
+                }
+            }
+        }
+    }
+
+    @EventHandler
+    fun onHit(event: ProjectileHitEvent) {
+        event.hitBlock?.let { block ->
+            val projectile = event.entity
+            val shooter = projectile.shooter
+
+            if (shooter is Player) {
+                val traceur = shooter.traceur
+                traceur.challenge?.let { challenge ->
+                    challenge.dataByBlock[block]?.run {
+                        projectile.remove()
+                        onHit(challenge, traceur, event)
+                    }
                 }
             }
         }
