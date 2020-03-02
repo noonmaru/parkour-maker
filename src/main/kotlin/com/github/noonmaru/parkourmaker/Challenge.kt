@@ -62,7 +62,12 @@ class Challenge(val level: Level) {
         checkState()
 
         if (_traceurs.add(traceur)) {
-            _spawns[traceur] = startLocs.random()
+            startLocs.let { locs ->
+                if (locs.isNotEmpty()) {
+                    _spawns[traceur] = locs.random()
+                }
+            }
+
             traceur.challenge = this
         }
     }
