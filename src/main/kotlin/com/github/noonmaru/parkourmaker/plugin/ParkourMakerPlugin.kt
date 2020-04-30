@@ -15,6 +15,7 @@ import org.bukkit.plugin.java.JavaPlugin
 /**
  * @author Nemo
  */
+@Suppress("unused")
 class ParkourMakerPlugin : JavaPlugin() {
     override fun onEnable() {
         ParkourMaker.initialize(this)

@@ -32,8 +32,7 @@ class Challenge(val level: Level) {
     var toggle = Toggle.RED
         internal set
 
-    var valid = true
-        private set
+    private var valid = true
 
     internal fun parseBlocks() {
         checkState()
