@@ -9,6 +9,7 @@ import org.bukkit.block.BlockFace
 import org.bukkit.block.data.BlockData
 import org.bukkit.block.data.Directional
 import org.bukkit.entity.Firework
+import org.bukkit.event.entity.EntityExplodeEvent
 import org.bukkit.event.entity.ProjectileHitEvent
 import org.bukkit.event.player.PlayerInteractEvent
 import org.bukkit.event.player.PlayerMoveEvent
@@ -70,6 +71,10 @@ abstract class ParkourBlockData {
     open fun onHit(challenge: Challenge, traceur: Traceur, event: ProjectileHitEvent) {}
 
     open fun onInteract(challenge: Challenge, traceur: Traceur, event: PlayerInteractEvent) {}
+
+    open fun onExplode(challenge: Challenge) {}
+
+    open fun onAnvil(challenge: Challenge) {}
 
     open fun destroy() {}
 }
@@ -206,6 +211,14 @@ class SwitchBlock : ParkourBlock() {
         }
 
         override fun onHit(challenge: Challenge, traceur: Traceur, event: ProjectileHitEvent) {
+            changeState(challenge)
+        }
+
+        override fun onExplode(challenge: Challenge) {
+            changeState(challenge)
+        }
+
+        override fun onAnvil(challenge: Challenge) {
             changeState(challenge)
         }
 
