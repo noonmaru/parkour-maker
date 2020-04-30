@@ -1,26 +1,30 @@
 package com.github.noonmaru.parkourmaker
 
+import com.github.noonmaru.parkourmaker.block.ParkourBlock
+import com.github.noonmaru.parkourmaker.block.ParkourBlockData
+import com.github.noonmaru.parkourmaker.block.ParkourBlocks
+import com.github.noonmaru.parkourmaker.block.Respawnable
+import com.github.noonmaru.parkourmaker.block.SpawnBlock
+import com.github.noonmaru.parkourmaker.block.Toggle
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableMap
 import com.sk89q.worldedit.bukkit.BukkitAdapter
 import com.sk89q.worldedit.regions.Region
 import org.bukkit.block.Block
 
-
 class Challenge(val level: Level) {
-
     lateinit var dataMap: Map<ParkourBlock, Set<ParkourBlockData>>
 
     lateinit var dataByBlock: Map<Block, ParkourBlockData>
 
-    lateinit var startLocs: List<SpawnBlock.SpawnData>
+    private lateinit var startLocs: List<SpawnBlock.SpawnData>
 
     private var _traceurs = HashSet<Traceur>()
 
+    private var _respawns = HashMap<Traceur, Respawnable>()
+
     val traceurs: Set<Traceur>
         get() = _traceurs
-
-    private var _respawns = HashMap<Traceur, Respawnable>()
 
     val respawns: Map<Traceur, Respawnable>
         get() = _respawns
@@ -103,19 +107,19 @@ class Challenge(val level: Level) {
         }
     }
 
-    fun checkState() {
-        check(this.valid) { "Invalid $this" }
-    }
-
     internal fun setSpawn(traceur: Traceur, respawnable: Respawnable): Respawnable? {
         return _respawns.put(traceur, respawnable)
     }
-}
 
-fun Region.forEachBlocks(action: (Block) -> Unit) {
-    val w = BukkitAdapter.asBukkitWorld(world).world
+    private fun checkState() {
+        check(this.valid) { "Invalid $this" }
+    }
 
-    forEach {
-        action.invoke(w.getBlockAt(it.x, it.y, it.z))
+    private fun Region.forEachBlocks(action: (Block) -> Unit) {
+        val world = BukkitAdapter.asBukkitWorld(world).world
+
+        forEach {
+            action.invoke(world.getBlockAt(it.x, it.y, it.z))
+        }
     }
 }

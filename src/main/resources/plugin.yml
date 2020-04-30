@@ -1,10 +1,15 @@
-name: $pluginName
-main: $pluginMain
+name: ParkourMaker
+main: com.github.noonmaru.parkourmaker.plugin.ParkourMakerPlugin
 depend: [Kotlin, Tap, WorldEdit]
-authors: [Noonmaru, MinedApple]
+authors: [Noonmaru, MinedApple, PatrickKR]
 api-version: '1.13'
 version: $pluginVersion
 commands:
   parkour:
     usage: /<command> help
-    permission: parkourmaker-command
+    permission: parkourmaker.command
+    description: ParkourMaker command
+permissions:
+  parkourmaker.command:
+    default: op
+    description: ParkourMaker command permission
