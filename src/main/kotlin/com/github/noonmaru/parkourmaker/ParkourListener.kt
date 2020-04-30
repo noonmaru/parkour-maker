@@ -2,11 +2,13 @@ package com.github.noonmaru.parkourmaker
 
 import com.github.noonmaru.parkourmaker.ParkourMaker.traceur
 import com.sk89q.worldedit.math.BlockVector3
+import org.bukkit.Material
 import org.bukkit.block.BlockFace
 import org.bukkit.entity.EntityType
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
+import org.bukkit.event.block.BlockPlaceEvent
 import org.bukkit.event.entity.EntityChangeBlockEvent
 import org.bukkit.event.entity.EntityExplodeEvent
 import org.bukkit.event.entity.ProjectileHitEvent
@@ -95,9 +97,10 @@ class ParkourListener : Listener {
     }
 
     @EventHandler
-    fun onAnvil(event: EntityChangeBlockEvent) {
+    fun onAnvilFall(event: EntityChangeBlockEvent) {
         if (event.entityType == EntityType.FALLING_BLOCK) {
             val block = event.block
+            if (block.blockData.material != Material.ANVIL) return
             val fallPoint = block.getRelative(BlockFace.DOWN)
             ParkourMaker.levels.values.forEach { level ->
                 if (level.region.contains(BlockVector3.at(fallPoint.x, fallPoint.y, fallPoint.z)))
