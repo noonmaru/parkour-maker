@@ -5,6 +5,7 @@ import com.sk89q.worldedit.math.BlockVector3
 import org.bukkit.Material
 import org.bukkit.block.BlockFace
 import org.bukkit.entity.EntityType
+import org.bukkit.entity.FallingBlock
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
@@ -98,21 +99,39 @@ class ParkourListener : Listener {
 
     @EventHandler
     fun onAnvilFall(event: EntityChangeBlockEvent) {
-        if (event.entityType == EntityType.FALLING_BLOCK) {
-            val block = event.block
-            if (block.blockData.material != Material.ANVIL) return
-            val fallPoint = block.getRelative(BlockFace.DOWN)
-            ParkourMaker.levels.values.forEach { level ->
-                if (level.region.contains(BlockVector3.at(fallPoint.x, fallPoint.y, fallPoint.z)))
-                    level.challenge?.let { challenge ->
-                        challenge.dataByBlock[fallPoint]?.run {
-                            event.entity.remove()
-                            event.isCancelled = true
-                            block.breakNaturally()
-                            changeState(challenge)
-                        }
+        val entity = event.entity
+        if (entity.type != EntityType.FALLING_BLOCK) return
+        if ((entity as FallingBlock).blockData.material != Material.ANVIL) return
+        val block = event.block
+        val fallPoint = block.getRelative(BlockFace.DOWN)
+        ParkourMaker.levels.values.forEach { level ->
+            if (level.region.contains(BlockVector3.at(fallPoint.x, fallPoint.y, fallPoint.z)))
+                level.challenge?.let { challenge ->
+                    challenge.dataByBlock[fallPoint]?.run {
+                        entity.remove()
+                        event.isCancelled = true
+                        block.type = Material.AIR
+                        changeState(challenge)
                     }
-            }
+                }
+        }
+    }
+
+    @EventHandler
+    fun onAnvilPlace(event: BlockPlaceEvent) {
+        val block = event.block
+        if (block.type != Material.ANVIL) return
+        val fallPoint = block.getRelative(BlockFace.DOWN)
+        if (fallPoint.type != Material.RED_SHULKER_BOX && fallPoint.type != Material.LIGHT_BLUE_SHULKER_BOX) return
+        ParkourMaker.levels.values.forEach { level ->
+            if (level.region.contains(BlockVector3.at(fallPoint.x, fallPoint.y, fallPoint.z)))
+                level.challenge?.let { challenge ->
+                    challenge.dataByBlock[fallPoint]?.run {
+                        event.isCancelled = true
+                        block.type = Material.AIR
+                        changeState(challenge)
+                    }
+                }
         }
     }
 }
