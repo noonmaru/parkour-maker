@@ -101,9 +101,11 @@ class ParkourListener : Listener {
     fun onAnvilFall(event: EntityChangeBlockEvent) {
         val entity = event.entity
         if (entity.type != EntityType.FALLING_BLOCK) return
-        if ((entity as FallingBlock).blockData.material != Material.ANVIL) return
+        val material = (entity as FallingBlock).blockData.material
+        if (material != Material.ANVIL && material != Material.CHIPPED_ANVIL && material != Material.DAMAGED_ANVIL) return
         val block = event.block
         val fallPoint = block.getRelative(BlockFace.DOWN)
+        if (fallPoint.type != Material.RED_SHULKER_BOX && fallPoint.type != Material.LIGHT_BLUE_SHULKER_BOX) return
         ParkourMaker.levels.values.forEach { level ->
             if (level.region.contains(BlockVector3.at(fallPoint.x, fallPoint.y, fallPoint.z)))
                 level.challenge?.let { challenge ->
@@ -120,7 +122,7 @@ class ParkourListener : Listener {
     @EventHandler
     fun onAnvilPlace(event: BlockPlaceEvent) {
         val block = event.block
-        if (block.type != Material.ANVIL) return
+        if (block.type != Material.ANVIL && block.type != Material.CHIPPED_ANVIL && block.type != Material.DAMAGED_ANVIL) return
         val fallPoint = block.getRelative(BlockFace.DOWN)
         if (fallPoint.type != Material.RED_SHULKER_BOX && fallPoint.type != Material.LIGHT_BLUE_SHULKER_BOX) return
         ParkourMaker.levels.values.forEach { level ->
