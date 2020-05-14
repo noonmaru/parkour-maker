@@ -3,13 +3,19 @@ package com.github.noonmaru.parkourmaker.plugin
 import com.github.noonmaru.parkourmaker.ParkourListener
 import com.github.noonmaru.parkourmaker.ParkourMaker
 import com.github.noonmaru.parkourmaker.ParkourTask
-import com.github.noonmaru.parkourmaker.command.*
+import com.github.noonmaru.parkourmaker.command.CommandCreate
+import com.github.noonmaru.parkourmaker.command.CommandList
+import com.github.noonmaru.parkourmaker.command.CommandQuit
+import com.github.noonmaru.parkourmaker.command.CommandRemove
+import com.github.noonmaru.parkourmaker.command.CommandStart
+import com.github.noonmaru.parkourmaker.command.CommandStop
 import com.github.noonmaru.tap.command.command
 import org.bukkit.plugin.java.JavaPlugin
 
 /**
  * @author Nemo
  */
+@Suppress("unused")
 class ParkourMakerPlugin : JavaPlugin() {
     override fun onEnable() {
         ParkourMaker.initialize(this)

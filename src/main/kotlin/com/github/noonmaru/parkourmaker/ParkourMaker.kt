@@ -1,6 +1,6 @@
 package com.github.noonmaru.parkourmaker
 
-import com.github.noonmaru.parkourmaker.util.toBoundingBox
+import com.github.noonmaru.parkourmaker.util.WorldEditSupport.toBoundingBox
 import com.github.noonmaru.tap.fake.FakeManager
 import com.sk89q.worldedit.regions.CuboidRegion
 import org.bukkit.Bukkit
@@ -15,7 +15,6 @@ import java.io.File
 import java.util.*
 
 object ParkourMaker {
-
     lateinit var coursesFolder: File
         private set
 
@@ -25,16 +24,35 @@ object ParkourMaker {
     lateinit var levelFolder: File
         private set
 
+    private lateinit var traceurs: MutableMap<UUID, Traceur>
+
+    @Suppress("ObjectPropertyName")
     private lateinit var _levels: MutableMap<String, Level>
+
     val levels: Map<String, Level>
         get() = _levels
 
-    private lateinit var _traceurs: MutableMap<UUID, Traceur>
-    val traceurs: Map<UUID, Traceur>
-        get() = _traceurs
-
     lateinit var fakeManager: FakeManager
         private set
+
+    fun createLevel(name: String, region: CuboidRegion): Level {
+        _levels.apply {
+            require(name !in this) { "이미 사용중인 이름입니다." }
+            getOverlappedLevels(region.toBoundingBox()).let { overlaps ->
+                require(overlaps.isEmpty()) { "${overlaps.joinToString { it.name }} 레벨과 구역이 겹칩니다." }
+            }
+
+            return Level(name, region).apply {
+                copyCourse()
+                save()
+                _levels[name] = this
+            }
+        }
+    }
+
+    private fun getOverlappedLevels(box: BoundingBox): List<Level> {
+        return levels.values.filter { box.overlaps(it.region.toBoundingBox()) }
+    }
 
     internal fun initialize(plugin: Plugin) {
         plugin.dataFolder.let { dir ->
@@ -54,7 +72,7 @@ object ParkourMaker {
             }
         }
 
-        _traceurs = HashMap<UUID, Traceur>().apply {
+        traceurs = HashMap<UUID, Traceur>().apply {
             Bukkit.getOnlinePlayers().forEach { player ->
                 put(player.uniqueId, Traceur(player))
             }
@@ -76,36 +94,16 @@ object ParkourMaker {
         }
     }
 
-    fun createLevel(name: String, region: CuboidRegion): Level {
-        _levels.apply {
-            require(name !in this) { "Name is already in use" }
-            getOverlappedLevels(region.toBoundingBox()).let { overlaps ->
-                require(overlaps.isEmpty()) { "Region overlaps with other levels ${overlaps.joinToString { it.name }}" }
-            }
-
-            return Level(name, region).apply {
-                copyCourse()
-                save()
-
-                _levels[name] = this
-            }
-        }
-    }
-
-    fun getOverlappedLevels(box: BoundingBox): List<Level> {
-        return levels.values.filter { box.overlaps(it.region.toBoundingBox()) }
-    }
-
-    fun registerPlayer(player: Player) {
-        _traceurs.computeIfAbsent(player.uniqueId) { Traceur(player) }
+    internal fun registerPlayer(player: Player) {
+        traceurs.computeIfAbsent(player.uniqueId) { Traceur(player) }
     }
 
     internal fun removeLevel(level: Level) {
         _levels.remove(level.name)
     }
-}
 
-val Player.traceur: Traceur
-    get() {
-        return requireNotNull(ParkourMaker.traceurs[uniqueId]) { "Not found traceur for ${this.name}(${this.uniqueId})" }
-    }
+    internal val Player.traceur: Traceur
+        get() {
+            return requireNotNull(traceurs[uniqueId]) { "${this.name}(${this.uniqueId})에 해당하는 트레이서를 찾지 못했습니다." }
+        }
+}
