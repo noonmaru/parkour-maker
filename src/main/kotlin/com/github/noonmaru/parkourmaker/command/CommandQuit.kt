@@ -19,7 +19,7 @@ class CommandQuit : CommandComponent {
             }
         }
 
-        if (args.isEmpty()) {
+        if (!args.hasNext()) { // bug: ArgumentList::isEmpty does not return true
             if (sender !is Player)
                 return false
 

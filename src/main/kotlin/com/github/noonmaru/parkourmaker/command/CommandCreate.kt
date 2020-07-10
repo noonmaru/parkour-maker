@@ -18,23 +18,28 @@ class CommandCreate : CommandComponent {
     }
 
     override fun onCommand(sender: CommandSender, label: String, componentLabel: String, args: ArgumentList): Boolean {
-        sender as Player
+        // fix: exception thrown when ArgumentList is empty
+        if (!args.hasNext()) { // bug: ArgumentList::isEmpty does not return true
+            return false
+        } else {
+            sender as Player
 
-        sender.selection?.let { region ->
-            if (region !is CuboidRegion) {
-                sender.sendMessage("파쿠르 코스로 지원하지 않는 구역입니다. $region")
-                return true
-            }
+            sender.selection?.let { region ->
+                if (region !is CuboidRegion) {
+                    sender.sendMessage("파쿠르 코스로 지원하지 않는 구역입니다. $region")
+                    return true
+                }
 
-            val name = args.next()
+                val name = args.next()
 
-            try {
-                ParkourMaker.createLevel(name, region)
-                sender.sendMessage("${ChatColor.BOLD}$name ${ChatColor.RESET} 레벨을 생성했습니다.")
-            } catch (e: Exception) {
-                sender.sendMessage("${ChatColor.BOLD}$name ${ChatColor.RESET} 레벨을 생성하지 못했습니다. ${ChatColor.GRAY}${e.message}")
-            }
-        } ?: sender.sendMessage("${ChatColor.RED}먼저 WorldEdit의 Wand로 구역을 지정해주세요.")
+                try {
+                    ParkourMaker.createLevel(name, region)
+                    sender.sendMessage("${ChatColor.BOLD}$name ${ChatColor.RESET} 레벨을 생성했습니다.")
+                } catch (e: Exception) {
+                    sender.sendMessage("${ChatColor.BOLD}$name ${ChatColor.RESET} 레벨을 생성하지 못했습니다. ${ChatColor.GRAY}${e.message}")
+                }
+            } ?: sender.sendMessage("${ChatColor.RED}먼저 WorldEdit의 Wand로 구역을 지정해주세요.")
+        }
 
         return true
     }
