@@ -7,7 +7,7 @@ import org.bukkit.command.CommandSender
 
 class CommandList : CommandComponent {
     override fun onCommand(sender: CommandSender, label: String, componentLabel: String, args: ArgumentList): Boolean {
-        sender.sendMessage(ParkourMaker.levels.values.joinToString(transform = { it.name }))
+        sender.sendMessage(ParkourMaker.levels.values.joinToString { it.name }) // style: lambda
         return true
     }
 }
