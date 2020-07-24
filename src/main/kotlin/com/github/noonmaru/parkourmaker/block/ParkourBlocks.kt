@@ -18,8 +18,8 @@ object ParkourBlocks {
 
         if (state is Banner) return CHECKPOINT
 
+        // removed unnecessary null return
         return when (type) {
-            Material.AIR -> null
             Material.EMERALD_BLOCK -> SPAWN
             Material.GOLD_BLOCK -> CLEAR
             Material.RED_SHULKER_BOX, Material.LIGHT_BLUE_SHULKER_BOX -> SWITCH

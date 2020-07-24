@@ -5,6 +5,7 @@ import com.sk89q.worldedit.bukkit.BukkitAdapter
 import com.sk89q.worldedit.math.BlockVector3
 import com.sk89q.worldedit.regions.CuboidRegion
 import com.sk89q.worldedit.regions.Region
+import org.bukkit.block.Block
 import org.bukkit.entity.Player
 import org.bukkit.util.BoundingBox
 import org.bukkit.util.Vector
@@ -19,6 +20,11 @@ object WorldEditSupport {
             } catch (e: Exception) {
                 null
             }
+        }
+
+
+    fun Block.getBlockVector3(): BlockVector3 {
+            return BlockVector3.at(x, y, z)
         }
 
     fun CuboidRegion.toBoundingBox(): BoundingBox {
