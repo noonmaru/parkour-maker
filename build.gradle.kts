@@ -2,8 +2,8 @@ plugins {
     kotlin("jvm") version "1.3.72"
 }
 
-group = properties["pluginGroup"]!!
-version = properties["pluginVersion"]!!
+group = requireNotNull(properties["pluginGroup"]) { "Group is undefined in properties" }
+version = requireNotNull(properties["pluginVersion"]) { "Version is undefined in properties" }
 
 repositories {
     maven("https://repo.maven.apache.org/maven2/")
@@ -14,7 +14,7 @@ repositories {
 
 dependencies {
     implementation(kotlin("stdlib-jdk8"))
-    implementation("com.destroystokyo.paper:paper-api:1.15.2-R0.1-SNAPSHOT")
+    implementation("com.destroystokyo.paper:paper-api:1.14-R0.1-SNAPSHOT")
     implementation("com.sk89q.worldedit:worldedit-bukkit:7.1.0")
     implementation("com.github.noonmaru:tap:2.3.1")
 }
