@@ -6,6 +6,7 @@ import org.bukkit.block.Block
 
 object ParkourBlocks {
     private val SPAWN = SpawnBlock()
+    private val RESPAWN = ReturnBlock()
     private val CLEAR = ClearBlock()
     private val CHECKPOINT = CheckpointBlock()
     val SWITCH = SwitchBlock()
@@ -22,6 +23,7 @@ object ParkourBlocks {
             Material.AIR -> null
             Material.EMERALD_BLOCK -> SPAWN
             Material.GOLD_BLOCK -> CLEAR
+            Material.BLACK_CONCRETE -> RESPAWN
             Material.RED_SHULKER_BOX, Material.LIGHT_BLUE_SHULKER_BOX -> SWITCH
             Material.RED_CONCRETE, Material.LIGHT_BLUE_CONCRETE -> TOGGLE
             else -> null
