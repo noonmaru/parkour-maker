@@ -3,6 +3,7 @@ package com.github.noonmaru.parkourmaker
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
+import org.bukkit.event.entity.EntityExplodeEvent
 import org.bukkit.event.entity.ProjectileHitEvent
 import org.bukkit.event.player.PlayerInteractEvent
 import org.bukkit.event.player.PlayerJoinEvent
@@ -84,4 +85,29 @@ class ParkourListener : Listener {
             }
         }
     }
+
+    @EventHandler
+    fun onExplode(event: EntityExplodeEvent) {
+        val blocks = event.blockList().iterator()
+        val changed = HashSet<Challenge>()
+
+        while (blocks.hasNext()) {
+            val block = blocks.next()
+
+            for (level in ParkourMaker.levels.values) {
+                level.challenge?.let { challenge ->
+                    if (changed.add(challenge)) {
+                        val parkourBlock = challenge.dataByBlock[block]
+
+                        if (parkourBlock != null) {
+                            blocks.remove()
+                            parkourBlock.onExplode(challenge, event)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    //Anvil 보류
 }

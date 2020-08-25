@@ -1,5 +1,6 @@
 package com.github.noonmaru.parkourmaker
 
+import com.github.noonmaru.parkourmaker.util.Tick
 import com.github.noonmaru.tap.fake.FakeEntity
 import com.github.noonmaru.tap.fake.invisible
 import org.bukkit.*
@@ -10,12 +11,12 @@ import org.bukkit.block.data.BlockData
 import org.bukkit.block.data.Directional
 import org.bukkit.entity.ArmorStand
 import org.bukkit.entity.Firework
+import org.bukkit.event.entity.EntityExplodeEvent
 import org.bukkit.event.entity.ProjectileHitEvent
 import org.bukkit.event.player.PlayerInteractEvent
 import org.bukkit.event.player.PlayerMoveEvent
 
 object ParkourBlocks {
-
     val SPAWN = SpawnBlock()
     val CLEAR = ClearBlock()
     val CHECKPOINT = CheckpointBlock()
@@ -71,6 +72,8 @@ abstract class ParkourBlockData {
     open fun onHit(challenge: Challenge, traceur: Traceur, event: ProjectileHitEvent) {}
 
     open fun onInteract(challenge: Challenge, traceur: Traceur, event: PlayerInteractEvent) {}
+
+    open fun onExplode(challenge: Challenge, event: EntityExplodeEvent) {}
 
     open fun destroy() {}
 }
@@ -210,7 +213,17 @@ class SwitchBlock : ParkourBlock() {
             changeState(challenge)
         }
 
-        private fun changeState(challenge: Challenge) {
+        override fun onExplode(challenge: Challenge, event: EntityExplodeEvent) {
+            changeState(challenge)
+        }
+
+        internal fun changeState(challenge: Challenge) {
+            val currentTicks = Tick.currentTicks
+
+            if (challenge.toggleDelayTicks > currentTicks)
+                return
+
+            challenge.toggleDelayTicks = currentTicks + 10L
             challenge.toggle = challenge.toggle.next()
 
             when (val type = block.type) {
@@ -292,3 +305,5 @@ class ToggleBlock : ParkourBlock() {
         }
     }
 }
+
+// 공식버전 업데이트 이전까지 파일 하나에서 관리

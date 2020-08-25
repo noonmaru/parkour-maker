@@ -1,11 +1,5 @@
 package com.github.noonmaru.parkourmaker
 
-import com.github.noonmaru.parkourmaker.block.ParkourBlock
-import com.github.noonmaru.parkourmaker.block.ParkourBlockData
-import com.github.noonmaru.parkourmaker.block.ParkourBlocks
-import com.github.noonmaru.parkourmaker.block.Respawnable
-import com.github.noonmaru.parkourmaker.block.SpawnBlock
-import com.github.noonmaru.parkourmaker.block.Toggle
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableMap
 import com.sk89q.worldedit.bukkit.BukkitAdapter
@@ -31,6 +25,8 @@ class Challenge(val level: Level) {
 
     var toggle = Toggle.RED
         internal set
+
+    var toggleDelayTicks = 0L
 
     private var valid = true
 
