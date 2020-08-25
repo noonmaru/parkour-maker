@@ -1,6 +1,5 @@
 package com.github.noonmaru.parkourmaker
 
-import org.bukkit.block.BlockFace
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
@@ -9,6 +8,7 @@ import org.bukkit.event.player.PlayerInteractEvent
 import org.bukkit.event.player.PlayerJoinEvent
 import org.bukkit.event.player.PlayerMoveEvent
 import org.bukkit.event.player.PlayerQuitEvent
+import org.bukkit.util.NumberConversions.floor
 
 class ParkourListener : Listener {
     @EventHandler
@@ -57,7 +57,6 @@ class ParkourListener : Listener {
     @EventHandler
     fun onMove(event: PlayerMoveEvent) {
         event.player.let { player ->
-
             val traceur = player.traceur
             traceur.challenge?.let { challenge ->
                 val passBlock = event.to.block
@@ -65,9 +64,21 @@ class ParkourListener : Listener {
                     onPass(challenge, traceur, event)
                 }
                 if (player.isOnGround) {
-                    val stepBlock = passBlock.getRelative(BlockFace.DOWN)
-                    challenge.dataByBlock[stepBlock]?.run {
-                        onStep(challenge, traceur, event)
+                    val world = player.world
+                    val box = player.boundingBox
+                    val minX: Int = floor(box.minX)
+                    val minZ: Int = floor(box.minZ)
+                    val maxX: Int = floor(box.maxX)
+                    val maxZ: Int = floor(box.maxZ)
+                    val y = floor(box.minY - 0.000001)
+
+                    for (x in minX..maxX) {
+                        for (z in minZ..maxZ) {
+                            val stepBlock = world.getBlockAt(x, y, z)
+                            challenge.dataByBlock[stepBlock]?.run {
+                                onStep(challenge, traceur, event)
+                            }
+                        }
                     }
                 }
             }
