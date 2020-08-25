@@ -1,5 +1,6 @@
 plugins {
     kotlin("jvm") version "1.3.61"
+    id("com.github.johnrengelman.shadow") version "5.2.0"
 }
 
 group = properties["pluginGroup"]!!
@@ -14,12 +15,13 @@ repositories {
 }
 
 dependencies {
-    implementation(kotlin("stdlib-jdk8")) //kotlin
-    implementation("junit:junit:4.12") //junit
-    implementation("com.destroystokyo.paper:paper-api:1.15.2-R0.1-SNAPSHOT") //paper
-    implementation("com.comphenix.protocol:ProtocolLib:4.5.0") //protocollib
-    implementation("com.github.noonmaru:tap:2.3.1") //tap
-    implementation("com.sk89q.worldedit:worldedit-bukkit:7.1.0") //worldedit
+    compileOnly(kotlin("stdlib-jdk8")) //kotlin
+    compileOnly("junit:junit:4.12") //junit
+    compileOnly("com.destroystokyo.paper:paper-api:1.16.1-R0.1-SNAPSHOT") //paper
+    compileOnly("com.comphenix.protocol:ProtocolLib:4.6.0-SNAPSHOT") //protocollib
+    compileOnly("com.github.noonmaru:tap:2.8.8") //tap
+    compileOnly("com.sk89q.worldedit:worldedit-bukkit:7.1.0") //worldedit
+    implementation("com.github.noonmaru:kommand:0.1.9")
 }
 
 tasks {
@@ -40,8 +42,12 @@ tasks {
             expand(project.properties)
         }
     }
+    shadowJar {
+        relocate("com.github.noonmaru.kommand", "com.github.noonmaru.parkourmaker.shaded")
+        archiveClassifier.set("dist")
+    }
     create<Copy>("distJar") {
-        from(jar)
+        from(shadowJar)
         into("W:\\Servers\\parkour-maker\\plugins")
     }
 }
