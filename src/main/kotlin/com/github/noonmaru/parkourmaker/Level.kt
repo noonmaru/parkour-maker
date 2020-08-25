@@ -25,17 +25,16 @@ import java.nio.file.StandardCopyOption
 import java.security.DigestInputStream
 import java.security.MessageDigest
 import java.text.SimpleDateFormat
-import java.util.*
-
+import java.util.Date
 
 class Level {
     val name: String
 
-    val file: File
+    private val file: File
 
     val region: CuboidRegion
 
-    var clipboard: Clipboard? = null
+    private var clipboard: Clipboard? = null
 
     var challenge: Challenge? = null
         private set
@@ -43,26 +42,26 @@ class Level {
     private val courseFile: File
         get() = File(ParkourMaker.coursesFolder, "$name.schem")
 
-    var valid = true
-        private set
+    private var valid = true
 
     constructor(name: String, region: CuboidRegion) {
         checkNotNull(region.world) { "Region must have region!" }
 
         this.name = name
         this.region = region
-        this.file = File(ParkourMaker.levelFolder, "$name.yml")
+        file = File(ParkourMaker.levelFolder, "$name.yml")
     }
 
     constructor(file: File) {
-        this.name = file.name.removeSuffix(".yml")
+        name = file.name.removeSuffix(".yml")
         this.file = file
 
-        YamlConfiguration.loadConfiguration(file).let { config ->
-            val world = Bukkit.getWorld(config.getString("world")!!)!!
-            val min = config.getBlockVector3("min")
-            val max = config.getBlockVector3("max")
-            region = CuboidRegion(BukkitAdapter.adapt(world), min, max)
+        YamlConfiguration.loadConfiguration(file).run {
+            region = CuboidRegion(
+                BukkitAdapter.adapt(Bukkit.getWorlds()[0]),
+                getBlockVector3("min"),
+                getBlockVector3("max")
+            )
         }
     }
 
@@ -77,16 +76,13 @@ class Level {
 
     fun startChallenge(): Challenge {
         checkState()
-
         check(challenge == null) { "Challenge is already in progress." }
-
         copyCourse()
+
         val challenge = Challenge(this).apply {
             parseBlocks()
         }
-
         this.challenge = challenge
-
         return challenge
     }
 
@@ -127,8 +123,7 @@ class Level {
         val file = courseFile
         val temp = File(file.parentFile.apply { mkdirs() }, "${file.name}.tmp")
 
-        BuiltInClipboardFormat.SPONGE_SCHEMATIC.getWriter(FileOutputStream(temp))
-            .use { writer -> writer.write(this) }
+        BuiltInClipboardFormat.SPONGE_SCHEMATIC.getWriter(FileOutputStream(temp)).use { writer -> writer.write(this) }
 
         if (file.exists()) {
             if (file.md5Digest.contentEquals(temp.md5Digest)) {
@@ -136,7 +131,7 @@ class Level {
                     file.toPath(),
                     File(
                         ParkourMaker.historyFolder.apply { mkdirs() },
-                        "$name${dateFormat.format(Date())}.schem"
+                        "$name${SimpleDateFormat("yyyyMMddHHmmss").format(Date())}.schem"
                     ).toPath(),
                     StandardCopyOption.REPLACE_EXISTING
                 )
@@ -176,46 +171,43 @@ class Level {
         config.save(file)
     }
 
-    fun checkState() {
-        require(valid) { "Invalid $this" }
-    }
-
     fun remove() {
         challenge?.run { stopChallenge() }
         valid = false
         file.delete()
         ParkourMaker.removeLevel(this)
     }
-}
 
-private val File.md5Digest: ByteArray
-    get() {
-        val md = MessageDigest.getInstance("MD5")
-        DigestInputStream(FileInputStream(this).buffered(), md).use {
-            while (true) {
-                if (it.read() == -1)
-                    break
+    private fun checkState() {
+        require(valid) { "Invalid $this" }
+    }
+
+    private val File.md5Digest: ByteArray
+        get() {
+            val md = MessageDigest.getInstance("MD5")
+            DigestInputStream(FileInputStream(this).buffered(), md).use {
+                while (true)
+                    if (it.read() == -1)
+                        break
             }
+            return md.digest()
         }
-        return md.digest()
+
+    private fun ConfigurationSection.getBlockVector3(path: String): BlockVector3 {
+        return getConfigurationSection(path)!!.run {
+            BlockVector3.at(
+                getInt("x"),
+                getInt("y"),
+                getInt("z")
+            )
+        }
     }
 
-private val dateFormat = SimpleDateFormat("yyyyMMddHHmmss")
-
-private fun ConfigurationSection.getBlockVector3(path: String): BlockVector3 {
-    return getConfigurationSection(path)!!.run {
-        BlockVector3.at(
-            getInt("x"),
-            getInt("y"),
-            getInt("z")
-        )
-    }
-}
-
-private fun ConfigurationSection.setPoint(path: String, point: BlockVector3) {
-    createSection(path).apply {
-        this["x"] = point.blockX
-        this["y"] = point.blockY
-        this["z"] = point.blockZ
+    private fun ConfigurationSection.setPoint(path: String, point: BlockVector3) {
+        createSection(path).apply {
+            this["x"] = point.blockX
+            this["y"] = point.blockY
+            this["z"] = point.blockZ
+        }
     }
 }

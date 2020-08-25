@@ -9,25 +9,27 @@ import org.bukkit.entity.Player
 import org.bukkit.util.BoundingBox
 import org.bukkit.util.Vector
 
-val Player.selection: Region?
-    get() {
-        return try {
-            WorldEdit.getInstance().sessionManager[BukkitAdapter.adapt(this)]?.run {
-                getSelection(selectionWorld)
+object WorldEditSupport {
+    val Player.selection: Region?
+        get() {
+            return try {
+                WorldEdit.getInstance().sessionManager[BukkitAdapter.adapt(this)]?.run {
+                    getSelection(selectionWorld)
+                }
+            } catch (e: Exception) {
+                null
             }
-        } catch (e: Exception) {
-            null
         }
+
+    fun CuboidRegion.toBoundingBox(): BoundingBox {
+        return BoundingBox.of(minimumPoint.toVector(), maximumPoint.toVector().apply {
+            x += 1
+            y += 1
+            z += 1
+        })
     }
 
-fun CuboidRegion.toBoundingBox(): BoundingBox {
-    return BoundingBox.of(minimumPoint.toVector(), maximumPoint.toVector().apply {
-        x += 1
-        y += 1
-        z += 1
-    })
-}
-
-fun BlockVector3.toVector(): Vector {
-    return Vector(x, y, z)
+    private fun BlockVector3.toVector(): Vector {
+        return Vector(x, y, z)
+    }
 }
