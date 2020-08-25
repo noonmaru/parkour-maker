@@ -1,13 +1,14 @@
 package com.github.noonmaru.parkourmaker
 
-import com.github.noonmaru.tap.fake.FakeArmorStand
-import com.github.noonmaru.tap.fake.FakeFallingBlock
+import com.github.noonmaru.tap.fake.FakeEntity
+import com.github.noonmaru.tap.fake.invisible
 import org.bukkit.*
 import org.bukkit.block.Banner
 import org.bukkit.block.Block
 import org.bukkit.block.BlockFace
 import org.bukkit.block.data.BlockData
 import org.bukkit.block.data.Directional
+import org.bukkit.entity.ArmorStand
 import org.bukkit.entity.Firework
 import org.bukkit.event.entity.ProjectileHitEvent
 import org.bukkit.event.player.PlayerInteractEvent
@@ -249,8 +250,8 @@ class ToggleBlock : ParkourBlock() {
 
     class ToggleData : ParkourBlockData() {
         private lateinit var toggle: Toggle
-        private lateinit var fakeStand: FakeArmorStand
-        private lateinit var fakeBlock: FakeFallingBlock
+        private lateinit var fakeStand: FakeEntity
+        private lateinit var fakeBlock: FakeEntity
 
         override fun onInitialize(challenge: Challenge) {
             toggle = when (block.type) {
@@ -259,13 +260,15 @@ class ToggleBlock : ParkourBlock() {
                 else -> error("Unknown toggle block: $block")
             }
 
-            ParkourMaker.fakeManager.run {
+            ParkourMaker.fakeEntityServer.run {
                 val loc = block.location.add(0.5, 0.0, 0.5)
-                fakeStand = createFakeEntity<FakeArmorStand>(loc).apply {
-                    invisible = true
-                    mark = true
+                fakeStand = spawnEntity(loc, ArmorStand::class.java).apply {
+                    updateMetadata<ArmorStand> {
+                        invisible = true
+                        isMarker = true
+                    }
                 }
-                fakeBlock = createFallingBlock(loc, toggle.fakeData).apply {
+                fakeBlock = spawnFallingBlock(loc, toggle.fakeData).apply {
                     fakeStand.addPassenger(this)
                 }
             }
@@ -281,10 +284,10 @@ class ToggleBlock : ParkourBlock() {
         internal fun update(toggle: Toggle) {
             if (this.toggle === toggle) {
                 block.type = toggle.blockType
-                fakeBlock.show = false
+                fakeBlock.isVisible = false
             } else {
                 block.type = Material.AIR
-                fakeBlock.show = true
+                fakeBlock.isVisible = true
             }
         }
     }

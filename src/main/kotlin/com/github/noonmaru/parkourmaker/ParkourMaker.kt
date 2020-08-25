@@ -1,15 +1,14 @@
 package com.github.noonmaru.parkourmaker
 
 import com.github.noonmaru.parkourmaker.util.toBoundingBox
-import com.github.noonmaru.tap.fake.FakeManager
+import com.github.noonmaru.tap.fake.FakeEntityServer
 import com.sk89q.worldedit.regions.CuboidRegion
 import org.bukkit.Bukkit
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.player.PlayerJoinEvent
-import org.bukkit.event.player.PlayerQuitEvent
-import org.bukkit.plugin.Plugin
+import org.bukkit.plugin.java.JavaPlugin
 import org.bukkit.util.BoundingBox
 import java.io.File
 import java.util.*
@@ -33,10 +32,10 @@ object ParkourMaker {
     val traceurs: Map<UUID, Traceur>
         get() = _traceurs
 
-    lateinit var fakeManager: FakeManager
+    lateinit var fakeEntityServer: FakeEntityServer
         private set
 
-    internal fun initialize(plugin: Plugin) {
+    internal fun initialize(plugin: JavaPlugin) {
         plugin.dataFolder.let { dir ->
             coursesFolder = File(dir, "courses")
             historyFolder = File(dir, "course-history")
@@ -60,19 +59,14 @@ object ParkourMaker {
             }
         }
 
-        fakeManager = FakeManager().apply {
+        fakeEntityServer = FakeEntityServer.create(plugin).apply {
             plugin.server.pluginManager.registerEvents(object : Listener {
                 @EventHandler
                 fun onJoin(event: PlayerJoinEvent) {
                     addPlayer(event.player)
                 }
-
-                @EventHandler
-                fun onQuit(event: PlayerQuitEvent) {
-                    removePlayer(event.player)
-                }
             }, plugin)
-            plugin.server.scheduler.runTaskTimer(plugin, this, 0L, 1L)
+            plugin.server.scheduler.runTaskTimer(plugin, this::update, 0L, 1L)
         }
     }
 
