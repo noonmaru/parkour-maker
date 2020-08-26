@@ -3,6 +3,7 @@ package com.github.noonmaru.parkourmaker
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
+import org.bukkit.event.entity.EntityDamageEvent
 import org.bukkit.event.entity.EntityExplodeEvent
 import org.bukkit.event.entity.ProjectileHitEvent
 import org.bukkit.event.player.PlayerInteractEvent
@@ -64,18 +65,22 @@ class ParkourListener : Listener {
                 challenge.dataByBlock[passBlock]?.run {
                     onPass(challenge, traceur, event)
                 }
-                if (player.isOnGround) {
+
+                val box = player.boundingBox
+                val y = floor(box.minY)
+                val stepY = floor(box.minY - 0.000001)
+
+                if (stepY != y) {
                     val world = player.world
-                    val box = player.boundingBox
                     val minX: Int = floor(box.minX)
                     val minZ: Int = floor(box.minZ)
                     val maxX: Int = floor(box.maxX)
                     val maxZ: Int = floor(box.maxZ)
-                    val y = floor(box.minY - 0.000001)
 
                     for (x in minX..maxX) {
                         for (z in minZ..maxZ) {
-                            val stepBlock = world.getBlockAt(x, y, z)
+                            val stepBlock = world.getBlockAt(x, stepY, z)
+
                             challenge.dataByBlock[stepBlock]?.run {
                                 onStep(challenge, traceur, event)
                             }
@@ -89,19 +94,48 @@ class ParkourListener : Listener {
     @EventHandler
     fun onExplode(event: EntityExplodeEvent) {
         val blocks = event.blockList().iterator()
-        val changed = HashSet<Challenge>()
 
         while (blocks.hasNext()) {
             val block = blocks.next()
 
             for (level in ParkourMaker.levels.values) {
                 level.challenge?.let { challenge ->
-                    if (changed.add(challenge)) {
-                        val parkourBlock = challenge.dataByBlock[block]
+                    val parkourBlock = challenge.dataByBlock[block]
 
-                        if (parkourBlock != null) {
-                            blocks.remove()
-                            parkourBlock.onExplode(challenge, event)
+                    if (parkourBlock != null) {
+                        blocks.remove()
+                        parkourBlock.onExplode(challenge, event)
+                    }
+                }
+            }
+        }
+    }
+
+    @EventHandler
+    fun onDamage(event: EntityDamageEvent) {
+        val entity = event.entity
+
+        if (entity is Player) {
+            val traceur = entity.traceur
+            traceur.challenge?.let { challenge ->
+                val cause = event.cause
+
+                if (cause == EntityDamageEvent.DamageCause.FIRE) {
+                    val world = entity.world
+                    val box = entity.boundingBox
+                    val minX: Int = floor(box.minX)
+                    val minZ: Int = floor(box.minZ)
+                    val maxX: Int = floor(box.maxX)
+                    val maxZ: Int = floor(box.maxZ)
+                    val stepY = floor(box.minY)
+
+                    for (x in minX..maxX) {
+                        for (z in minZ..maxZ) {
+                            val stepBlock = world.getBlockAt(x, stepY, z)
+
+                            challenge.dataByBlock[stepBlock]?.run {
+                                onFire(challenge, traceur, event)
+                            }
                         }
                     }
                 }
