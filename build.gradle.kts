@@ -1,5 +1,5 @@
 plugins {
-    kotlin("jvm") version "1.3.61"
+    kotlin("jvm") version "1.3.72"
     id("com.github.johnrengelman.shadow") version "5.2.0"
 }
 
@@ -43,11 +43,18 @@ tasks {
         }
     }
     shadowJar {
-        relocate("com.github.noonmaru.kommand", "com.github.noonmaru.parkourmaker.shaded")
         archiveClassifier.set("dist")
     }
     create<Copy>("distJar") {
         from(shadowJar)
         into("W:\\Servers\\parkour-maker\\plugins")
+    }
+}
+
+if (!hasProperty("debug")) {
+    tasks {
+        shadowJar {
+            relocate("com.github.noonmaru.kommand", "com.github.noonmaru.parkourmaker.shaded")
+        }
     }
 }
