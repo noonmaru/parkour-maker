@@ -13,6 +13,7 @@ import com.github.noonmaru.parkourmaker.util.selection
 import com.sk89q.worldedit.regions.CuboidRegion
 import org.bukkit.Bukkit
 import org.bukkit.GameMode
+import org.bukkit.attribute.Attribute
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 
@@ -90,6 +91,12 @@ object KommandParkour {
 
         if (playerNames.isEmpty()) {
             if (sender is Player) {
+                sender.apply {
+                    health = requireNotNull(getAttribute(Attribute.GENERIC_MAX_HEALTH)).value
+                    foodLevel = 20
+                    saturation = 4.0F
+                }
+
                 challenge.addTraceur(sender.traceur)
                 sender.gameMode = GameMode.ADVENTURE
                 challenge.respawns[sender.traceur]?.let { sender.teleport(it.respawn) }
@@ -97,6 +104,9 @@ object KommandParkour {
         } else {
             for (playerName in playerNames) {
                 Bukkit.getPlayerExact(playerName)?.run {
+                    health = requireNotNull(getAttribute(Attribute.GENERIC_MAX_HEALTH)).value
+                    foodLevel = 20
+                    saturation = 4.0F
                     challenge.addTraceur(traceur)
                     gameMode = GameMode.ADVENTURE
                     challenge.respawns[traceur]?.let { teleport(it.respawn) }
@@ -121,6 +131,10 @@ object KommandParkour {
             level.stopChallenge()
             sender.sendFeedback("${level.name} 도전을 종료했습니다.")
         }
+    }
+
+    private fun blocks(sender: Player) {
+
     }
 }
 
