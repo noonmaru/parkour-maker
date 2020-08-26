@@ -1,9 +1,13 @@
 package com.github.noonmaru.parkourmaker
 
+import com.github.noonmaru.parkourmaker.task.ParkourTask
 import com.github.noonmaru.parkourmaker.util.Tick
+import com.github.noonmaru.tap.effect.playFirework
 import com.github.noonmaru.tap.fake.FakeEntity
 import com.github.noonmaru.tap.fake.invisible
+import com.google.common.collect.ImmutableList
 import org.bukkit.*
+import org.bukkit.attribute.Attribute
 import org.bukkit.block.Banner
 import org.bukkit.block.Block
 import org.bukkit.block.BlockFace
@@ -11,10 +15,13 @@ import org.bukkit.block.data.BlockData
 import org.bukkit.block.data.Directional
 import org.bukkit.entity.ArmorStand
 import org.bukkit.entity.Firework
+import org.bukkit.entity.Shulker
+import org.bukkit.event.entity.EntityDamageEvent
 import org.bukkit.event.entity.EntityExplodeEvent
 import org.bukkit.event.entity.ProjectileHitEvent
 import org.bukkit.event.player.PlayerInteractEvent
 import org.bukkit.event.player.PlayerMoveEvent
+import kotlin.math.min
 
 object ParkourBlocks {
     val SPAWN = SpawnBlock()
@@ -22,6 +29,18 @@ object ParkourBlocks {
     val CHECKPOINT = CheckpointBlock()
     val SWITCH = SwitchBlock()
     val TOGGLE = ToggleBlock()
+    val SAND = SandBlock()
+    val SOUL_FIRE = SoulFireBlock()
+
+    val list = ImmutableList.of(
+        SPAWN,
+        CLEAR,
+        CHECKPOINT,
+        SWITCH,
+        TOGGLE,
+        SAND,
+        SOUL_FIRE
+    )
 
     fun getBlock(block: Block): ParkourBlock? {
         val state = block.state
@@ -39,6 +58,10 @@ object ParkourBlocks {
                 return SWITCH
             } else if (type == Material.RED_CONCRETE || type == Material.LIGHT_BLUE_CONCRETE) {
                 return TOGGLE
+            } else if (type == Material.SANDSTONE) {
+                return SAND
+            } else if (type == Material.SOUL_CAMPFIRE) {
+                return SOUL_FIRE
             }
         }
         return null
@@ -74,6 +97,8 @@ abstract class ParkourBlockData {
     open fun onInteract(challenge: Challenge, traceur: Traceur, event: PlayerInteractEvent) {}
 
     open fun onExplode(challenge: Challenge, event: EntityExplodeEvent) {}
+
+    open fun onFire(challenge: Challenge, traceur: Traceur, event: EntityDamageEvent) {}
 
     open fun destroy() {}
 }
@@ -214,6 +239,8 @@ class SwitchBlock : ParkourBlock() {
         }
 
         override fun onExplode(challenge: Challenge, event: EntityExplodeEvent) {
+            println("EXPLODE")
+
             changeState(challenge)
         }
 
@@ -301,6 +328,98 @@ class ToggleBlock : ParkourBlock() {
             } else {
                 block.type = Material.AIR
                 fakeBlock.isVisible = true
+            }
+        }
+    }
+}
+
+class SandBlock : ParkourBlock() {
+    override fun newBlockData(block: Block): ParkourBlockData {
+        return SandBlockData()
+    }
+
+    class SandBlockData : ParkourBlockData(), Runnable {
+        private lateinit var stand: FakeEntity
+        private lateinit var fallingBlock: FakeEntity
+        private lateinit var shulker: FakeEntity
+        private var falling = false
+
+        private lateinit var task: ParkourTask
+        private var fallingSpeed = 0.05
+
+        override fun onInitialize(challenge: Challenge) {
+            val loc = block.location.add(0.5, 0.0, 0.5)
+            val fakeServer = ParkourMaker.fakeEntityServer
+
+            stand = fakeServer.spawnEntity(loc, ArmorStand::class.java)
+            fallingBlock = fakeServer.spawnFallingBlock(loc, block.blockData)
+            shulker = fakeServer.spawnEntity(loc, Shulker::class.java)
+
+            stand.updateMetadata<ArmorStand> {
+                isMarker = true
+                invisible = true
+            }
+
+            shulker.updateMetadata<Shulker> {
+                setAI(false)
+                invisible = true
+            }
+
+            stand.addPassenger(fallingBlock)
+            stand.addPassenger(shulker)
+        }
+
+        override fun onStep(challenge: Challenge, traceur: Traceur, event: PlayerMoveEvent) {
+            if (falling) return
+
+            falling = true
+            block.type = Material.AIR
+            task = challenge.runTaskTimer(this, 0L, 1L)
+        }
+
+        override fun run() {
+            stand.move(0.0, -fallingSpeed, 0.0)
+            fallingSpeed = min(0.2, fallingSpeed + 0.01)
+
+            val loc = stand.location.add(0.0, 1.0, 0.0)
+
+            if (loc.y < 0 || !loc.block.getRelative(BlockFace.UP).type.isAir) {
+                task.cancel()
+                shulker.remove()
+                fallingBlock.remove()
+                stand.remove()
+            }
+        }
+
+        override fun destroy() {
+            shulker.remove()
+            fallingBlock.remove()
+            stand.remove()
+        }
+    }
+}
+
+class SoulFireBlock : ParkourBlock() {
+    companion object {
+        val firework = FireworkEffect.builder().with(FireworkEffect.Type.STAR).withColor(Color.AQUA).build()
+    }
+
+    override fun newBlockData(block: Block): ParkourBlockData {
+        return SoulFireBlockData()
+    }
+
+    class SoulFireBlockData : ParkourBlockData() {
+        override fun onFire(challenge: Challenge, traceur: Traceur, event: EntityDamageEvent) {
+            event.isCancelled = true
+
+            traceur.player?.let { player ->
+                val loc = player.location.add(0.0, 0.9, 0.0)
+                loc.world.playFirework(loc, firework)
+
+                player.health = player.getAttribute(Attribute.GENERIC_MAX_HEALTH)?.value ?: 20.0
+                player.foodLevel = 20
+                player.saturation = 4.0F
+                challenge.respawns[traceur]?.let { player.teleport(it.respawn) }
             }
         }
     }
