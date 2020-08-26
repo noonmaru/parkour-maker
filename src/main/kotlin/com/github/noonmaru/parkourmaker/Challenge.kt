@@ -1,5 +1,7 @@
 package com.github.noonmaru.parkourmaker
 
+import com.github.noonmaru.parkourmaker.task.ParkourScheduler
+import com.github.noonmaru.parkourmaker.task.ParkourTask
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableMap
 import com.sk89q.worldedit.bukkit.BukkitAdapter
@@ -27,6 +29,8 @@ class Challenge(val level: Level) {
         internal set
 
     var toggleDelayTicks = 0L
+
+    private val scheduler = ParkourScheduler()
 
     private var valid = true
 
@@ -86,8 +90,20 @@ class Challenge(val level: Level) {
         }
     }
 
+    internal fun runTaskTimer(runnable: Runnable, delay: Long, period: Long): ParkourTask {
+        checkState()
+
+        return scheduler.runTaskTimer(runnable, delay, period)
+    }
+
+    internal fun update() {
+        scheduler.run()
+    }
+
     internal fun destroy() {
         checkState()
+
+        scheduler.cancelAll()
 
         valid = false
 
