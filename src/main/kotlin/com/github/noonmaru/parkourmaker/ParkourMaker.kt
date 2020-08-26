@@ -67,6 +67,10 @@ object ParkourMaker {
                 }
             }, plugin)
             plugin.server.scheduler.runTaskTimer(plugin, this::update, 0L, 1L)
+
+            for (onlinePlayer in Bukkit.getOnlinePlayers()) {
+                addPlayer(onlinePlayer)
+            }
         }
     }
 
@@ -92,6 +96,7 @@ object ParkourMaker {
 
     fun registerPlayer(player: Player) {
         _traceurs.computeIfAbsent(player.uniqueId) { Traceur(player) }
+        fakeEntityServer.addPlayer(player)
     }
 
     internal fun removeLevel(level: Level) {
