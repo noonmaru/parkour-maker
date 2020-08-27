@@ -95,7 +95,7 @@ object ParkourMaker {
     }
 
     fun registerPlayer(player: Player) {
-        _traceurs.computeIfAbsent(player.uniqueId) { Traceur(player) }
+        _traceurs.computeIfAbsent(player.uniqueId) { Traceur(player) }.player = player
         fakeEntityServer.addPlayer(player)
     }
 
