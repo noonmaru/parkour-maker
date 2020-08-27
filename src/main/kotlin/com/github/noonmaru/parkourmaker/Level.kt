@@ -25,7 +25,7 @@ import java.nio.file.StandardCopyOption
 import java.security.DigestInputStream
 import java.security.MessageDigest
 import java.text.SimpleDateFormat
-import java.util.Date
+import java.util.*
 
 class Level {
     val name: String
@@ -48,7 +48,7 @@ class Level {
         checkNotNull(region.world) { "Region must have region!" }
 
         this.name = name
-        this.region = region
+        this.region = region.clone()
         file = File(ParkourMaker.levelFolder, "$name.yml")
     }
 
