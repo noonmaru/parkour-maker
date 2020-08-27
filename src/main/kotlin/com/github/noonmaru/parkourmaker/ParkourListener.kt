@@ -6,10 +6,7 @@ import org.bukkit.event.Listener
 import org.bukkit.event.entity.EntityDamageEvent
 import org.bukkit.event.entity.EntityExplodeEvent
 import org.bukkit.event.entity.ProjectileHitEvent
-import org.bukkit.event.player.PlayerInteractEvent
-import org.bukkit.event.player.PlayerJoinEvent
-import org.bukkit.event.player.PlayerMoveEvent
-import org.bukkit.event.player.PlayerQuitEvent
+import org.bukkit.event.player.*
 import org.bukkit.util.NumberConversions.floor
 
 class ParkourListener : Listener {
@@ -139,6 +136,18 @@ class ParkourListener : Listener {
                         }
                     }
                 }
+            }
+        }
+    }
+
+    @EventHandler
+    fun onRespawn(event: PlayerRespawnEvent) {
+        val player = event.player
+        val traceur = player.traceur
+
+        traceur.challenge?.let { challenge ->
+            challenge.respawns[traceur]?.let {
+                event.respawnLocation = it.respawn
             }
         }
     }
