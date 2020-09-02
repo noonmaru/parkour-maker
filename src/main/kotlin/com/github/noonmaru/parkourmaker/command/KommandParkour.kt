@@ -11,7 +11,6 @@ import com.github.noonmaru.parkourmaker.ParkourMaker
 import com.github.noonmaru.parkourmaker.traceur
 import com.github.noonmaru.parkourmaker.util.selection
 import com.sk89q.worldedit.regions.CuboidRegion
-import org.bukkit.Bukkit
 import org.bukkit.GameMode
 import org.bukkit.attribute.Attribute
 import org.bukkit.command.CommandSender
@@ -37,10 +36,16 @@ object KommandParkour {
             }
             then("start") {
                 then("level" to LevelArgument) {
+                    then("player" to player()) {
+                        executes {
+                            start(it.sender, it.parseArgument("level"), it.parseArgument("player"))
+                        }
+                    }
+                    require {
+                        this is Player
+                    }
                     executes {
-                        start(it.sender, it.parseArgument("level"), it.rawArguments.let { args ->
-                            args.copyOfRange(2, args.count())
-                        })
+                        start(it.sender, it.parseArgument("level"), it.sender as Player)
                     }
                 }
             }
@@ -86,32 +91,15 @@ object KommandParkour {
         sender.sendFeedback("${level.name} 파쿠르 레벨을 제거했습니다.")
     }
 
-    private fun start(sender: CommandSender, level: Level, playerNames: Array<out String>) {
+    private fun start(sender: CommandSender, level: Level, player: Player) {
         val challenge = level.startChallenge()
-
-        if (playerNames.isEmpty()) {
-            if (sender is Player) {
-                sender.apply {
-                    health = requireNotNull(getAttribute(Attribute.GENERIC_MAX_HEALTH)).value
-                    foodLevel = 20
-                    saturation = 4.0F
-                }
-
-                challenge.addTraceur(sender.traceur)
-                sender.gameMode = GameMode.ADVENTURE
-                challenge.respawns[sender.traceur]?.let { sender.teleport(it.respawn) }
-            }
-        } else {
-            for (playerName in playerNames) {
-                Bukkit.getPlayerExact(playerName)?.run {
-                    health = requireNotNull(getAttribute(Attribute.GENERIC_MAX_HEALTH)).value
-                    foodLevel = 20
-                    saturation = 4.0F
-                    challenge.addTraceur(traceur)
-                    gameMode = GameMode.ADVENTURE
-                    challenge.respawns[traceur]?.let { teleport(it.respawn) }
-                }
-            }
+        player.run {
+            health = requireNotNull(getAttribute(Attribute.GENERIC_MAX_HEALTH)).value
+            foodLevel = 20
+            saturation = 4.0F
+            challenge.addTraceur(traceur)
+            gameMode = GameMode.ADVENTURE
+            challenge.respawns[traceur]?.let { teleport(it.respawn) }
         }
     }
 
@@ -131,10 +119,6 @@ object KommandParkour {
             level.stopChallenge()
             sender.sendFeedback("${level.name} 도전을 종료했습니다.")
         }
-    }
-
-    private fun blocks(sender: Player) {
-
     }
 }
 
