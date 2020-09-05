@@ -13,7 +13,30 @@ Parkour Maker는 마인크래프트에서 역동적인 파쿠르 맵을 제작�
 
 ## 시작하기
 
-Parkour Maker는 PaperMC에서 동작하는 마인크래프트 플러그인으로, PaperMC 서버가 필요합니다.
+### PaperMC 서버 설치
+
+Parkour Maker는 PaperMC에서 동작하는 마인크래프트 플러그인으로, PaperMC 서버가 필요합니다.  
+
+[PaperMC 다운로드 문서](https://papermc.io/downloads)에서 PaperMC를 다운로드받습니다.
+
+환경에 맞춰 다운로드받은 PaperMC 파일과 같은 경로에 `.cmd`, `.bat` 또는 `.sh` 파일을 추가합니다.
+
+```bash
+java -Xmx<메모리할당량> -jar <파일명> --nogui
+```
+
+아래와 같이 입력하면 [Paper 1.16.2의 184번째 빌드 파일](https://github.com/PaperMC/Paper/commit/43e5174a0157c04709f8132ab3711237d76d0954)을 메모리에 1GB만큼 할당하고 서버를 실행할 수 있습니다:
+
+```bash
+java -Xmx1G -jar paper-184.jar --nogui
+```
+
+* 팁:
+```
+리눅스 환경에서
+nohup sh <file> &&
+를 입력하면 터미널이 종료되어도 계속해서 서버를 실행할 수 있습니다.
+```
 
 ### Parkour Maker 다운로드
 
