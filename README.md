@@ -41,9 +41,9 @@ nohup sh <file> &&
 ### Parkour Maker 다운로드
 
 Parkour Maker는 개발 중인 상태로, 배포용 릴리즈 판이 없습니다.  
-대신 개발 중의 Parkour Maker를 본 레포지토리의 [우측 상단 Code 버튼](https://github.com/noonmaru/parkour-maker/archive/master.zip)을 통해 다운로드 받으실 수 있습니다. (또는 [여기](https://github.com/noonmaru/parkour-maker/archive/master.zip)를 클릭)  
+대신 개발 중의 Parkour Maker를 본 리포지토리의 [우측 상단 Code 버튼](https://github.com/noonmaru/parkour-maker/archive/master.zip)을 통해 다운로드 받으실 수 있습니다. (또는 [여기](https://github.com/noonmaru/parkour-maker/archive/master.zip)를 클릭)  
 
-Git을 통해 레포지토리를 클론할 수도 있습니다.  
+Git을 통해 리포지토리를 클론할 수도 있습니다.  
 
 ```bash
 git clone -b master https://github.com/noonmaru/parkour-maker.git
