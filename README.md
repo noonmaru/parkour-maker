@@ -82,22 +82,22 @@ tasks {
 }
 ```
 
-수정 후 gradlew를 통해 프로젝트를 빌드합니다.
+수정 후 gradlew를 통해 프로젝트를 빌드합니다.  
 
-명령 프롬프트
+**명령 프롬프트**
 ```bash
 cd <경로>
 gradlew clean distJar
 ```
 
-PowerShell
+**PowerShell**
 ```PowerShell
 cd <경로>
 .\gradlew clean distJar
 ```
 
 ### 의존성 플러그인 설치
-Parkour Maker는 몇가지 의존성 플러그인을 설치해야 작동될 수 있습니다.
+Parkour Maker는 몇가지 의존성 플러그인을 서버에 함께 적용해야 작동될 수 있습니다.
 
 * [Tap](https://github.com/noonmaru/tap)
 * [ProtocolLib](https://www.spigotmc.org/resources/protocollib.1997/)
@@ -135,6 +135,6 @@ Parkour Maker는 [GPL 3.0 License](./LICENSE)(이하 이용허락)의 보호를 
 ## 관련 영상
 
 | 공개 | 업데이트 |
-| === | === |
+| --- | --- |
 | [![ON / OFF - Youtube](https://img.youtube.com/vi/Kfg0RvjHzD0/0.jpg)](https://www.youtube.com/watch?v=Kfg0RvjHzD0) | [![떨어지는 블록 - Youtube](https://img.youtube.com/vi/3nq2CraRkH0/0.jpg)](https://www.youtube.com/watch?v=3nq2CraRkH0) |
 
