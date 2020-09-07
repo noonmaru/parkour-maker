@@ -104,7 +104,7 @@ Parkour Maker는 몇가지 의존성 플러그인을 서버에 함께 적용해�
 * [Kotlin](https://github.com/noonmaru/kotlin-plugin)
 * [WorldEdit](https://dev.bukkit.org/projects/worldedit)
 
-[이슈 #2](https://github.com/noonmaru/parkour-maker/issues/2), `파쿠르 메이커 적용 및 작동 방법 문의 #2`에서 작동이 확인된 의존성 플러그인은 아래와 같습니다.
+[이슈 #2](https://github.com/noonmaru/parkour-maker/issues/2), `파쿠르 메이커 적용 및 작동 방법 문의`에서 작동이 확인된 의존성 플러그인은 아래와 같습니다.
 
 * [Tap 2.3.1](https://github.com/noonmaru/tap/releases/download/2.3.4/tap-2.3.4-dist.jar)
 * [ProtocolLib 4.5.0](https://repo.dmulloy2.net/nexus/repository/releases/com/comphenix/protocol/ProtocolLib/4.5.0/ProtocolLib-4.5.0.jar)
