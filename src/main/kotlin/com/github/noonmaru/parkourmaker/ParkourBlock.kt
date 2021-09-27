@@ -21,6 +21,10 @@ import org.bukkit.event.entity.EntityExplodeEvent
 import org.bukkit.event.entity.ProjectileHitEvent
 import org.bukkit.event.player.PlayerInteractEvent
 import org.bukkit.event.player.PlayerMoveEvent
+import org.bukkit.potion.PotionEffect
+import org.bukkit.potion.PotionEffectType
+import org.bukkit.Sound
+import org.bukkit.event.Listener
 import kotlin.math.min
 
 object ParkourBlocks {
@@ -31,6 +35,7 @@ object ParkourBlocks {
     val TOGGLE = ToggleBlock()
     val SAND = SandBlock()
     val SOUL_FIRE = SoulFireBlock()
+    val TRAMPOLINE = TrampolineBlock()
 
     val list = ImmutableList.of(
         SPAWN,
@@ -39,7 +44,8 @@ object ParkourBlocks {
         SWITCH,
         TOGGLE,
         SAND,
-        SOUL_FIRE
+        SOUL_FIRE,
+        TRAMPOLINE
     )
 
     fun getBlock(block: Block): ParkourBlock? {
@@ -62,6 +68,8 @@ object ParkourBlocks {
                 return SAND
             } else if (type == Material.SOUL_CAMPFIRE) {
                 return SOUL_FIRE
+            } else if (type == Material.NOTE_BLOCK) {
+                return TRAMPOLINE
             }
         }
         return null
@@ -420,6 +428,24 @@ class SoulFireBlock : ParkourBlock() {
                 player.foodLevel = 20
                 player.saturation = 4.0F
                 challenge.respawns[traceur]?.let { player.teleport(it.respawn) }
+            }
+        }
+    }
+}
+
+class TrampolineBlock : ParkourBlock() {
+    override fun newBlockData(block: Block): ParkourBlockData {
+        return TrampolineBlockData()
+    }
+
+    class TrampolineBlockData : ParkourBlockData(), Runnable {
+        override fun onStep(challenge: Challenge, traceur: Traceur, event: PlayerMoveEvent) {
+            
+            traceur.player?.let { player ->
+                player.addPotionEffect(PotionEffect(PotionEffectType.LEVITATION, 20, 9, true, false, true))
+                player.location.world.playSound(player.location, Sound.BLOCK_NOTE_BLOCK_HARP, 1.0F, 1.0F)
+                }
+                
             }
         }
     }
